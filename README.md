@@ -8,6 +8,12 @@ After installing [Rust](https://rustup.rs/), you can compile Rubato Downsampler 
 cargo xtask bundle rubato_downsampler --release
 ```
 
+## macOS universal binary
+
+```shell
+cargo xtask bundle-universal rubato_downsampler --release
+```
+
 ## Install
 
 ### macOS

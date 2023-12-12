@@ -154,7 +154,7 @@ impl Plugin for RubatoDownsampler {
                 .set_resample_ratio(resample_ratio, false)
                 .expect("Failed to set resample ratio to resampler_in");
             self.resampler_out
-                .set_resample_ratio(1.0 / resample_ratio, false)
+                .set_resample_ratio(resample_ratio.recip(), false)
                 .expect("Failed to set resample ratio to resampler_out");
         }
 

@@ -1,5 +1,10 @@
 use nih_plug::prelude::*;
-use std::sync::Arc;
+use rubato::{FastFixedIn, FastFixedOut, PolynomialDegree, Resampler};
+use std::{sync::Arc, vec};
+
+const MAX_SAMPLE_RATE: f64 = 192_000.0;
+const MIN_RESAMPLE_RATE: f64 = 250.0; //OTO Biscuitの最低リサンプリングレート 最高は30kHz
+const MAX_RESAMPLE_RATIO_RELATIVE: f64 = MAX_SAMPLE_RATE / MIN_RESAMPLE_RATE;
 
 // This is a shortened version of the gain example with most comments removed, check out
 // https://github.com/robbert-vdh/nih-plug/blob/master/plugins/examples/gain/src/lib.rs to get
@@ -7,6 +12,11 @@ use std::sync::Arc;
 
 struct RubatoDownsampler {
     params: Arc<RubatoDownsamplerParams>,
+    resampler_in: FastFixedIn<f32>,
+    temp_buffer: Vec<Vec<f32>>,
+    resampler_out: FastFixedOut<f32>,
+    sample_rate: f32,
+    resample_ratio: f64,
 }
 
 #[derive(Params)]
@@ -15,14 +25,33 @@ struct RubatoDownsamplerParams {
     /// these IDs remain constant, you can rename and reorder these fields as you wish. The
     /// parameters are exposed to the host in the same order they were defined. In this case, this
     /// gain parameter is stored as linear gain while the values are displayed in decibels.
-    #[id = "gain"]
-    pub gain: FloatParam,
+    #[id = "Resample"]
+    pub resample: IntParam,
 }
 
 impl Default for RubatoDownsampler {
     fn default() -> Self {
         Self {
             params: Arc::new(RubatoDownsamplerParams::default()),
+            resampler_in: FastFixedIn::new(
+                1.0f64,
+                MAX_RESAMPLE_RATIO_RELATIVE,
+                PolynomialDegree::Linear,
+                128,
+                2,
+            )
+            .unwrap(),
+            temp_buffer: vec![vec![0.0; 1024]; 2],
+            resampler_out: FastFixedOut::new(
+                1.0f64,
+                MAX_RESAMPLE_RATIO_RELATIVE,
+                PolynomialDegree::Linear,
+                128,
+                2,
+            )
+            .unwrap(),
+            sample_rate: 0.0,
+            resample_ratio: 1.0,
         }
     }
 }
@@ -30,29 +59,15 @@ impl Default for RubatoDownsampler {
 impl Default for RubatoDownsamplerParams {
     fn default() -> Self {
         Self {
-            // This gain is stored as linear gain. NIH-plug comes with useful conversion functions
-            // to treat these kinds of parameters as if we were dealing with decibels. Storing this
-            // as decibels is easier to work with, but requires a conversion for every sample.
-            gain: FloatParam::new(
-                "Gain",
-                util::db_to_gain(0.0),
-                FloatRange::Skewed {
-                    min: util::db_to_gain(-30.0),
-                    max: util::db_to_gain(30.0),
-                    // This makes the range appear as if it was linear when displaying the values as
-                    // decibels
-                    factor: FloatRange::gain_skew_factor(-30.0, 30.0),
+            resample: IntParam::new(
+                "Resample",
+                MIN_RESAMPLE_RATE as i32,
+                IntRange::Linear {
+                    min: MIN_RESAMPLE_RATE as i32,
+                    max: 30_000,
                 },
             )
-            // Because the gain parameter is stored as linear gain instead of storing the value as
-            // decibels, we need logarithmic smoothing
-            .with_smoother(SmoothingStyle::Logarithmic(50.0))
-            .with_unit(" dB")
-            // There are many predefined formatters we can use here. If the gain was stored as
-            // decibels instead of as a linear gain value, we could have also used the
-            // `.with_step_size(0.1)` function to get internal rounding.
-            .with_value_to_string(formatters::v2s_f32_gain_to_db(2))
-            .with_string_to_value(formatters::s2v_f32_gain_to_db()),
+            .with_unit("Hz"),
         }
     }
 }
@@ -80,7 +95,6 @@ impl Plugin for RubatoDownsampler {
         names: PortNames::const_default(),
     }];
 
-
     const MIDI_INPUT: MidiConfig = MidiConfig::None;
     const MIDI_OUTPUT: MidiConfig = MidiConfig::None;
 
@@ -102,18 +116,28 @@ impl Plugin for RubatoDownsampler {
     fn initialize(
         &mut self,
         _audio_io_layout: &AudioIOLayout,
-        _buffer_config: &BufferConfig,
+        buffer_config: &BufferConfig,
         _context: &mut impl InitContext<Self>,
     ) -> bool {
-        // Resize buffers and perform other potentially expensive initialization operations here.
-        // The `reset()` function is always called right after this function. You can remove this
-        // function if you do not need it.
+        self.sample_rate = buffer_config.sample_rate;
+        let resample_rate = self.params.resample.value();
+        self.resample_ratio = self.sample_rate as f64 / resample_rate as f64;
+        self.resampler_in
+            .set_resample_ratio(self.resample_ratio, false)
+            .expect("Failed to set resample ratio to resampler_in");
+        self.resampler_out
+            .set_resample_ratio(self.resample_ratio.recip(), false)
+            .expect("Failed to set resample ratio to resampler_out");
+
         true
     }
 
     fn reset(&mut self) {
         // Reset buffers and envelopes here. This can be called from the audio thread and may not
         // allocate. You can remove this function if you do not need it.
+
+        self.resampler_in.reset();
+        self.resampler_out.reset();
     }
 
     fn process(
@@ -122,14 +146,25 @@ impl Plugin for RubatoDownsampler {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        for channel_samples in buffer.iter_samples() {
-            // Smoothing is optionally built into the parameters themselves
-            let gain = self.params.gain.smoothed.next();
-
-            for sample in channel_samples {
-                *sample *= gain;
-            }
+        let resample_rate = self.params.resample.value();
+        let resample_ratio = resample_rate as f64 / self.sample_rate as f64;
+        if self.resample_ratio.round() as i32 != resample_ratio.round() as i32 {
+            self.resampler_in
+                .set_resample_ratio(resample_ratio, false)
+                .expect("Failed to set resample ratio to resampler_in");
+            self.resampler_out
+                .set_resample_ratio(1.0 / resample_ratio, false)
+                .expect("Failed to set resample ratio to resampler_out");
         }
+
+        let buf = buffer.as_slice();
+        let temp = self.temp_buffer.as_mut_slice();
+        self.resampler_in
+            .process_into_buffer(&buf, temp, None)
+            .expect("Failed to resample_in");
+        self.resampler_out
+            .process_into_buffer(&temp, buf, None)
+            .expect("Failed to resample_out");
 
         ProcessStatus::Normal
     }

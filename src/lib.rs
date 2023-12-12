@@ -3,8 +3,10 @@ use rubato::{FastFixedIn, FastFixedOut, PolynomialDegree, Resampler};
 use std::{sync::Arc, vec};
 
 const MAX_SAMPLE_RATE: f64 = 192_000.0;
-const MIN_RESAMPLE_RATE: f64 = 250.0; //OTO Biscuitの最低リサンプリングレート 最高は30kHz
+const MIN_RESAMPLE_RATE: f64 = 250.0; //OTO Biscuitの最低リサンプリングレート Hz
+const MAX_RESAMPLE_RATE: f64 = 30_000.0; //OTO Biscuitの最高リサンプリングレート Hz
 const MAX_RESAMPLE_RATIO_RELATIVE: f64 = MAX_SAMPLE_RATE / MIN_RESAMPLE_RATE;
+const RESAMPLE_CHUNK_SIZE: usize = 128;
 
 // This is a shortened version of the gain example with most comments removed, check out
 // https://github.com/robbert-vdh/nih-plug/blob/master/plugins/examples/gain/src/lib.rs to get
@@ -37,11 +39,11 @@ impl Default for RubatoDownsampler {
                 1.0f64,
                 MAX_RESAMPLE_RATIO_RELATIVE,
                 PolynomialDegree::Linear,
-                128,
+                RESAMPLE_CHUNK_SIZE,
                 2,
             )
             .unwrap(),
-            temp_buffer: vec![vec![0.0; 1024]; 2],
+            temp_buffer: vec![vec![0.0; RESAMPLE_CHUNK_SIZE]; 2],
             resampler_out: FastFixedOut::new(
                 1.0f64,
                 MAX_RESAMPLE_RATIO_RELATIVE,
@@ -61,10 +63,10 @@ impl Default for RubatoDownsamplerParams {
         Self {
             resample: IntParam::new(
                 "Resample",
-                MIN_RESAMPLE_RATE as i32,
+                10_000,
                 IntRange::Linear {
                     min: MIN_RESAMPLE_RATE as i32,
-                    max: 30_000,
+                    max: MAX_RESAMPLE_RATE as i32,
                 },
             )
             .with_unit("Hz"),
@@ -150,6 +152,7 @@ impl Plugin for RubatoDownsampler {
         let resample_ratio = resample_rate as f64 / self.sample_rate as f64;
         if self.resample_ratio.round() as i32 != resample_ratio.round() as i32 {
             self.resample_ratio = resample_ratio;
+            //TODO 関数化
             self.resampler_in
                 .set_resample_ratio(resample_ratio, false)
                 .expect("Failed to set resample ratio to resampler_in");

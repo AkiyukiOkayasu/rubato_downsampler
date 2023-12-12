@@ -149,6 +149,7 @@ impl Plugin for RubatoDownsampler {
         let resample_rate = self.params.resample.value();
         let resample_ratio = resample_rate as f64 / self.sample_rate as f64;
         if self.resample_ratio.round() as i32 != resample_ratio.round() as i32 {
+            self.resample_ratio = resample_ratio;
             self.resampler_in
                 .set_resample_ratio(resample_ratio, false)
                 .expect("Failed to set resample ratio to resampler_in");

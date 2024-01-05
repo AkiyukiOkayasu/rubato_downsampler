@@ -135,8 +135,7 @@ impl Plugin for RubatoDownsampler {
     }
 
     fn reset(&mut self) {
-        // Reset buffers and envelopes here. This can be called from the audio thread and may not
-        // allocate. You can remove this function if you do not need it.
+        nih_log!("Resetting plugin");
 
         self.resampler_in.reset();
         self.resampler_out.reset();

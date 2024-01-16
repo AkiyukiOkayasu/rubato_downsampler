@@ -36,3 +36,29 @@ clap-validator validate target/bundled/Rubato\ Downsampler.clap
 ```shell
 pluginval --verbose --strictness-level 5 target/bundled/Rubato\ Downsampler.vst3
 ```
+
+## Debug
+
+### Mac
+
+#### AudioPluginHost.app of JUCE
+
+Install JUCE and build AudioPluginHost.app  
+
+```shell
+lldb /Applications/JUCE/extras/AudioPluginHost/Builds/MacOSX/build/Release/AudioPluginHost.app/Contents/MacOS/AudioPluginHost
+(lldb) run
+```
+
+Then, scan VST3 plugins and test them.  
+
+#### Reaper
+
+Install [REAPER](https://www.reaper.fm/).  
+
+```shell
+lldb /Applications/REAPER.app/Contents/MacOS/REAPER
+(lldb) run
+```
+
+Then, scan VST3 or Clap plugins and test them.  

@@ -136,8 +136,11 @@ impl Plugin for RubatoDownsampler {
 
     fn reset(&mut self) {
         nih_log!("Resetting plugin");
+        // nih_log!();
+        // self.resampler_in.ratio()
 
         self.resampler_in.reset();
+        nih_log!("Resetting resampler_in");
         self.resampler_out.reset();
     }
 

@@ -175,10 +175,10 @@ impl Plugin for RubatoDownsampler {
         let buf = buffer.as_slice();
         let temp = self.temp_buffer.as_mut_slice();
         self.resampler_in
-            .process_into_buffer(&buf, temp, None)
+            .process_into_buffer(buf, temp, None)
             .expect("Failed to resample_in");
         self.resampler_out
-            .process_into_buffer(&temp, buf, None)
+            .process_into_buffer(temp, buf, None)
             .expect("Failed to resample_out");
 
         ProcessStatus::Normal

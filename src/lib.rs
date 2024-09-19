@@ -164,10 +164,10 @@ impl Plugin for RubatoDownsampler {
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
         let resample_rate = self.params.resample.value();
-        let resample_ratio = self.resample_ratio();
         if self.last_resample_rate != resample_rate {
             nih_log!("Resample rate changed: {} Hz", resample_rate);
             self.last_resample_rate = resample_rate;
+            let resample_ratio = self.resample_ratio();
             nih_log!("New resample ratio: {}", resample_ratio);
             //TODO 関数化
             self.resampler_in

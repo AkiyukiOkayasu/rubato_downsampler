@@ -136,6 +136,14 @@ impl Plugin for RubatoDownsampler {
     ) -> bool {
         nih_log!("Initializing plugin");
         self.sample_rate = buffer_config.sample_rate;
+        true
+    }
+
+    fn reset(&mut self) {
+        nih_log!("Resetting plugin");
+        self.resampler_in.reset();
+        self.resampler_out.reset();
+
         let resample_rate = self.params.resample.value();
         let resample_ratio = self.resample_ratio();
         nih_log!("Resample rate: {} Hz", resample_rate);
@@ -147,14 +155,6 @@ impl Plugin for RubatoDownsampler {
         self.resampler_out
             .set_resample_ratio(resample_ratio.recip(), false)
             .expect("Failed to set resample ratio to resampler_out");
-
-        true
-    }
-
-    fn reset(&mut self) {
-        nih_log!("Resetting plugin");
-        // self.resampler_in.reset();
-        // self.resampler_out.reset();
     }
 
     fn process(

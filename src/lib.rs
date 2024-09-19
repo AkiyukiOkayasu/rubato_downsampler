@@ -2,10 +2,14 @@ use nih_plug::prelude::*;
 use rubato::{FastFixedIn, FastFixedOut, PolynomialDegree, Resampler};
 use std::{sync::Arc, vec};
 
+/// プラグインがサポートする最高サンプリングレート Hz
 const MAX_SAMPLE_RATE: f64 = 192_000.0;
-const MIN_RESAMPLE_RATE: f64 = 250.0; //OTO Biscuitの最低リサンプリングレート Hz
-const MAX_RESAMPLE_RATE: f64 = 30_000.0; //OTO Biscuitの最高リサンプリングレート Hz
+///OTO Biscuitの最低リサンプリングレート Hz
+const MIN_RESAMPLE_RATE: f64 = 250.0;
+///OTO Biscuitの最高リサンプリングレート Hz
+const MAX_RESAMPLE_RATE: f64 = 30_000.0;
 const MAX_RESAMPLE_RATIO_RELATIVE: f64 = MAX_SAMPLE_RATE / MIN_RESAMPLE_RATE;
+/// リサンプリング処理のチャンクサイズ サンプル
 const RESAMPLE_CHUNK_SIZE: usize = 128;
 
 // This is a shortened version of the gain example with most comments removed, check out
@@ -14,8 +18,10 @@ const RESAMPLE_CHUNK_SIZE: usize = 128;
 
 struct RubatoDownsampler {
     params: Arc<RubatoDownsamplerParams>,
+    /// ダウンサンプリングのためのresampler
     resampler_in: FastFixedIn<f32>,
     temp_buffer: Vec<Vec<f32>>,
+    /// DAWのサンプルレートに戻すためのresampler
     resampler_out: FastFixedOut<f32>,
     sample_rate: f32,
     resample_ratio: f64,
@@ -136,11 +142,7 @@ impl Plugin for RubatoDownsampler {
 
     fn reset(&mut self) {
         nih_log!("Resetting plugin");
-        // nih_log!();
-        // self.resampler_in.ratio()
-
         self.resampler_in.reset();
-        nih_log!("Resetting resampler_in");
         self.resampler_out.reset();
     }
 

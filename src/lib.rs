@@ -54,7 +54,7 @@ impl Default for RubatoDownsampler {
                 1.0f64,
                 MAX_RESAMPLE_RATIO_RELATIVE,
                 PolynomialDegree::Linear,
-                128,
+                RESAMPLE_CHUNK_SIZE,
                 2,
             )
             .unwrap(),

@@ -19,8 +19,7 @@ cargo xtask bundle-universal rubato_downsampler --release
 ### macOS
 
 ```shell
-rsync -ahv --delete target/bundled/Rubato\ Downsampler.clap/ ~/Library/Audio/Plug-Ins/CLAP/Rubato\ Downsampler.clap
-rsync -ahv --delete target/bundled/Rubato\ Downsampler.vst3/ ~/Library/Audio/Plug-Ins/VST3/Rubato\ Downsampler.vst3
+PLUGIN_NAME="Rubato Downsampler"; rsync -ahv --delete target/bundled/${PLUGIN_NAME}.clap/ ~/Library/Audio/Plug-Ins/CLAP/${PLUGIN_NAME}.clap; rsync -ahv --delete target/bundled/${PLUGIN_NAME}.vst3/ ~/Library/Audio/Plug-Ins/VST3/${PLUGIN_NAME}.vst3
 ```
 
 ## Validation

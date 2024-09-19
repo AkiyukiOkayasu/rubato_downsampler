@@ -24,7 +24,8 @@ struct RubatoDownsampler {
     /// DAWのサンプルレートに戻すためのresampler
     resampler_out: FastFixedOut<f32>,
     sample_rate: f32,
-    resample_ratio: f64,
+    /// 直近のリサンプリングレート リサンプルレートの変更を検知するために使用
+    last_resample_rate: i32,
 }
 
 #[derive(Params)]
@@ -59,7 +60,7 @@ impl Default for RubatoDownsampler {
             )
             .unwrap(),
             sample_rate: 0.0,
-            resample_ratio: 1.0,
+            last_resample_rate: 0,
         }
     }
 }
@@ -77,6 +78,12 @@ impl Default for RubatoDownsamplerParams {
             )
             .with_unit("Hz"),
         }
+    }
+}
+
+impl RubatoDownsampler {
+    fn resample_ratio(&mut self) -> f64 {
+        self.params.resample.value() as f64 / self.sample_rate as f64
     }
 }
 
@@ -130,10 +137,10 @@ impl Plugin for RubatoDownsampler {
         nih_log!("Initializing plugin");
         self.sample_rate = buffer_config.sample_rate;
         let resample_rate = self.params.resample.value();
-        let resample_ratio = resample_rate as f64 / self.sample_rate as f64;
+        let resample_ratio = self.resample_ratio();
         nih_log!("Resample rate: {} Hz", resample_rate);
-        self.resample_ratio = resample_ratio;
-        nih_log!("Resample ratio: {}", self.resample_ratio);
+        self.last_resample_rate = resample_rate;
+        nih_log!("Resample ratio: {}", resample_ratio);
         self.resampler_in
             .set_resample_ratio(resample_ratio, false)
             .expect("Failed to set resample ratio to resampler_in");
@@ -157,12 +164,11 @@ impl Plugin for RubatoDownsampler {
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
         let resample_rate = self.params.resample.value();
-        let resample_ratio = resample_rate as f64 / self.sample_rate as f64;
-        if self.resample_ratio.round() as i32 != resample_ratio.round() as i32 {
+        let resample_ratio = self.resample_ratio();
+        if self.last_resample_rate != resample_rate {
             nih_log!("Resample rate changed: {} Hz", resample_rate);
-
-            self.resample_ratio = resample_ratio;
-            nih_log!("New resample ratio: {}", self.resample_ratio);
+            self.last_resample_rate = resample_rate;
+            nih_log!("New resample ratio: {}", resample_ratio);
             //TODO 関数化
             self.resampler_in
                 .set_resample_ratio(resample_ratio, false)

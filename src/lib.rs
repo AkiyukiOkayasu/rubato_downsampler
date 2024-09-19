@@ -127,9 +127,10 @@ impl Plugin for RubatoDownsampler {
         buffer_config: &BufferConfig,
         _context: &mut impl InitContext<Self>,
     ) -> bool {
+        nih_log!("Initializing plugin");
         self.sample_rate = buffer_config.sample_rate;
         let resample_rate = self.params.resample.value();
-        self.resample_ratio = self.sample_rate as f64 / resample_rate as f64;
+        self.resample_ratio = resample_rate as f64 / self.sample_rate as f64;
         self.resampler_in
             .set_resample_ratio(self.resample_ratio, false)
             .expect("Failed to set resample ratio to resampler_in");
@@ -155,6 +156,8 @@ impl Plugin for RubatoDownsampler {
         let resample_rate = self.params.resample.value();
         let resample_ratio = resample_rate as f64 / self.sample_rate as f64;
         if self.resample_ratio.round() as i32 != resample_ratio.round() as i32 {
+            nih_log!("Resample rate changed: {} Hz", resample_rate);
+
             self.resample_ratio = resample_ratio;
             //TODO 関数化
             self.resampler_in

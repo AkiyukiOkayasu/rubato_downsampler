@@ -4,11 +4,12 @@ use std::{sync::Arc, vec};
 
 /// プラグインがサポートする最高サンプリングレート Hz
 const MAX_SAMPLE_RATE: f64 = 192_000.0;
-///OTO Biscuitの最低リサンプリングレート Hz
+/// OTO Biscuitの最低リサンプリングレート Hz
 const MIN_RESAMPLE_RATE: f64 = 250.0;
-///OTO Biscuitの最高リサンプリングレート Hz
+/// OTO Biscuitの最高リサンプリングレート Hz
 const MAX_RESAMPLE_RATE: f64 = 30_000.0;
-const MAX_RESAMPLE_RATIO_RELATIVE: f64 = MAX_SAMPLE_RATE / MIN_RESAMPLE_RATE;
+/// リサンプリングの最大比率
+const MAX_RESAMPLE_RATIO_RELATIVE: f64 = (MAX_SAMPLE_RATE + 10_000f64) / MIN_RESAMPLE_RATE;
 /// リサンプリング処理のチャンクサイズ サンプル
 const RESAMPLE_CHUNK_SIZE: usize = 128;
 

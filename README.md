@@ -1,5 +1,9 @@
 # Rubato Downsampler
 
+## 既知の制限
+
+DAWのバッファーサイズは128サンプルである必要があります。
+
 ## Building
 
 After installing [Rust](https://rustup.rs/), you can compile Rubato Downsampler as follows:

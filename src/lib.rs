@@ -46,7 +46,7 @@ impl Default for RubatoDownsampler {
             resampler_in: FastFixedIn::new(
                 1.0f64,
                 MAX_RESAMPLE_RATIO_RELATIVE,
-                PolynomialDegree::Linear,
+                PolynomialDegree::Septic,
                 RESAMPLE_CHUNK_SIZE,
                 2,
             )
@@ -55,7 +55,7 @@ impl Default for RubatoDownsampler {
             resampler_out: FastFixedOut::new(
                 1.0f64,
                 MAX_RESAMPLE_RATIO_RELATIVE,
-                PolynomialDegree::Linear,
+                PolynomialDegree::Septic,
                 RESAMPLE_CHUNK_SIZE,
                 2,
             )

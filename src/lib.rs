@@ -127,7 +127,7 @@ impl Plugin for RubatoDownsampler {
     const MIDI_INPUT: MidiConfig = MidiConfig::None;
     const MIDI_OUTPUT: MidiConfig = MidiConfig::None;
 
-    const SAMPLE_ACCURATE_AUTOMATION: bool = true;
+    const SAMPLE_ACCURATE_AUTOMATION: bool = false;
 
     // If the plugin can send or receive SysEx messages, it can define a type to wrap around those
     // messages here. The type implements the `SysExMessage` trait, which allows conversion to and

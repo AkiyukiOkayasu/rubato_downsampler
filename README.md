@@ -65,3 +65,12 @@ lldb /Applications/REAPER.app/Contents/MacOS/REAPER
 ```
 
 Then, scan VST3 or Clap plugins and test them.  
+
+#### Cycling'74 / Max
+
+Install [Max](https://cycling74.com/).  
+
+```shell
+lldb /Applications/Max.app/Contents/MacOS/Max
+(lldb) run
+```

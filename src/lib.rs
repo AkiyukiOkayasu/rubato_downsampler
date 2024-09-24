@@ -174,6 +174,11 @@ impl Plugin for RubatoDownsampler {
         self.resampler_out
             .set_resample_ratio(resample_ratio.recip(), false)
             .expect("Failed to set resample ratio to resampler_out");
+
+        let delay = self.resampler_in.output_delay();
+        nih_log!("Resampler_in delay: {}", delay);
+        let delay = self.resampler_out.output_delay();
+        nih_log!("Resampler_out delay: {}", delay);
     }
 
     fn process(
@@ -199,6 +204,11 @@ impl Plugin for RubatoDownsampler {
             self.resampler_out
                 .set_resample_ratio(resample_ratio.recip(), false)
                 .expect("Failed to set resample ratio to resampler_out");
+
+            let delay = self.resampler_in.output_delay();
+            nih_log!("Resampler_in delay: {}", delay);
+            let delay = self.resampler_out.output_delay();
+            nih_log!("Resampler_out delay: {}", delay);
         }
 
         let buf = buffer.as_slice();

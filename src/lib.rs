@@ -191,6 +191,11 @@ impl Plugin for RubatoDownsampler {
         nih_log!("Resampler_in delay: {}", delay);
         let delay = self.resampler_out.output_delay();
         nih_log!("Resampler_out delay: {}", delay);
+
+        let frames = self.resampler_in.input_frames_next();
+        nih_log!("Resampler_in frames: {}", frames);
+        let frames = self.resampler_out.input_frames_next();
+        nih_log!("Resampler_out frames: {}", frames);
     }
 
     fn process(

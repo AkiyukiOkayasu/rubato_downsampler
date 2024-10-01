@@ -221,7 +221,6 @@ impl Plugin for RubatoDownsampler {
             nih_log!("Resampler_out delay: {}", delay);
         }
 
-        let num_samples = buffer.samples();
         let buf: &mut [&mut [f32]] = buffer.as_slice();
         let temp = self.temp_buffer.as_mut_slice();
         self.resampler_in

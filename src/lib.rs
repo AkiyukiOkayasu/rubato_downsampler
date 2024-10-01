@@ -1,6 +1,6 @@
 use nih_plug::prelude::*;
 use rubato::{FastFixedIn, FastFixedOut, PolynomialDegree, Resampler};
-use std::{sync::Arc, vec};
+use std::{cmp::max, sync::Arc, vec};
 
 /// プラグインがサポートする最高サンプリングレート Hz
 const MAX_SAMPLE_RATE: f64 = 192_000.0;
@@ -185,6 +185,18 @@ impl Plugin for RubatoDownsampler {
         let resample_rate = self.find_resample_rate(resample_rate);
         nih_log!("Find resample rate: {} Hz", resample_rate);
         self.update_resample_rate(resample_rate);
+
+        // リサンプリングの一時バッファーに必要となる最大のフレーム数を取得
+        let max_frames = max(
+            self.resampler_in.output_frames_max(),
+            self.resampler_out.input_frames_max(),
+        );
+        // リサンプリングの一時バッファーをリサイズ
+        if self.temp_buffer[0].len() < max_frames {
+            self.temp_buffer
+                .iter_mut()
+                .for_each(|e| e.resize(max_frames, 0.0));
+        }
 
         // リサンプリング処理の遅延をprint
         let delay = self.resampler_in.output_delay();
